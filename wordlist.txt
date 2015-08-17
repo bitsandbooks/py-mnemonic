@@ -1,4 +1,5 @@
-Wordlist ver 0.732 - EXPECT INCOMPATIBLE CHANGES;
+Wordlist ver 0.732 - EXPECT INCOMPATIBLE CHANGES
+From: https://web.archive.org/web/20090918202746/http://tothink.com/mnemonic/wordlist.html
 abraham
 absent
 absorb
