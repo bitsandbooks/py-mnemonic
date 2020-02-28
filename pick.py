@@ -17,8 +17,7 @@ def get_word():
 def get_string(word_count):
     word_string = [ get_word() ]
     for i in range(1,word_count): word_string.append( get_word() )
-    return word_separator.join(str(w) for w in word_string)
-
+    return word_separator.join( str(w) for w in word_string )
 
 def main():
     if len(sys.argv) == 1 or int(sys.argv[1]) == 1:
