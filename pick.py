@@ -43,7 +43,7 @@ def get_string(word_count):
 
 file_path = str(sys.path[0]) + str(os.path.sep) + file_name
 words_file = open(file_path, "r")
-words = words_file.readlines()[2:] # skip the first two (comment) lines 
+words = words_file.readlines() 
 words_file.close()
 
 if len(sys.argv) == 1 or int(sys.argv[1]) == 1:
