@@ -28,26 +28,80 @@ SOFTWARE.
 import os
 import random
 import sys
+import getopt
 
-separator = "-"
-file_name = "wordlist.txt"
+SEPARATOR = "-"
+FILE_NAME = "wordlist.txt"
 
-def get_word():
-    return random.choice(words).rstrip()
+def get_word(list):
+    return random.choice(list).rstrip()
 
-def get_string(word_count):
-    string_list = [ get_word() ]
-    for i in range(1,word_count):
-        string_list.append( get_word() )
-    return separator.join( str(item) for item in string_list )
+def generate_password_string(list, number, separator):
+    items = []
+    for i in range(int(number)):
+        word = get_word(list)
+        if word not in items:
+            items.append(word)
+        else:
+            --i
+    return SEPARATOR.join( str(item) for item in items )
 
-file_path = str(sys.path[0]) + str(os.path.sep) + file_name
-words_file = open(file_path, "r")
-words = words_file.readlines() 
-words_file.close()
+def generate_number_of_strings(list, number):
+    items = []
+    for i in range( int(number) ):
+        item = random.choice(list).rstrip()
+        if item not in items:
+            items.append(item)
+        else:
+            --i
+    return items
 
-if len(sys.argv) == 1 or int(sys.argv[1]) == 1:
-    print( get_word() )
-else:
-    words_requested = int(sys.argv[1])
-    print( get_string(words_requested) )
+def generate_string_of_letter(list, letter):
+    l = str.lower(letter)
+    filtered_words = [ item for item in list if item.startswith(l) ]
+    return random.choice(filtered_words).rstrip()
+
+
+def main(argv):
+    file_path = str(sys.path[0]) + str(os.path.sep) + FILE_NAME
+    words_file = open(file_path, "r")
+    WORDS = words_file.read().splitlines()
+    words_file.close()
+    # print( "Loaded " + str( len(WORDS) ) + " words from dictionary.\n" )
+
+    output = []
+
+    try:
+        opts, args = getopt.getopt( argv, "al:n:p:", [ "all", "letter=", "number=", "password=" ] )
+    except getopt.GetoptError:
+        print( 'USAGE: pick [ -a, --all ] [ -l <letter>, --letter <letter> ] [ -n <number>, --number <number> ] [ -p <number>, --password <number> ]' )
+        sys.exit(2)
+
+    # handle arguments
+    for opt, arg in opts:
+        if   opt in ("-p", "--password"):
+            entry = generate_password_string(WORDS, arg, SEPARATOR)
+            output.append(entry)
+        elif opt in ("-n", "--number"):
+            entries = generate_number_of_strings(WORDS, arg)
+            for i in range( int(arg) ):
+                output.append(entries[i])
+        elif opt in ("-l", "--letter"):
+            entry = generate_string_of_letter(WORDS, arg)
+            if entry not in output:
+                output.append(entry)
+        elif opt in ("-a", "--all"):
+            for entry in WORDS:
+                if entry not in output:
+                    output.append(entry)
+        elif opt not in ("-a", "--all", "-l", "--letter", "-n", "--number", "-p", "--password"):
+            entry = random.choice(WORDS).rstrip()
+            if entry not in output:
+                output.append(entry)
+
+    for item in output:
+        print(item)
+    sys.exit()
+
+if __name__ == "__main__":
+   main(sys.argv[1:])
