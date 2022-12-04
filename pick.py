@@ -80,8 +80,12 @@ def main(argv):
     # handle arguments
     for opt, arg in opts:
         if   opt in ("-p", "--password"):
-            entry = generate_password_string(WORDS, arg, SEPARATOR)
-            output.append(entry)
+            if int(arg) < 3:
+                print("For security reasons, passwords should be at least 3 words long.")
+                sys.exit(1)
+            else:
+                entry = generate_password_string(WORDS, arg, SEPARATOR)
+                output.append(entry)
         elif opt in ("-n", "--number"):
             entries = generate_number_of_strings(WORDS, arg)
             for i in range( int(arg) ):

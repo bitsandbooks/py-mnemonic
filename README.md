@@ -11,17 +11,12 @@ For ease of use, it is recommended to symlink `pick.py` as `pick` to a folder on
     $ chmod u+x /path/to/py-mnemonic/pick.py
     $ ln -s /path/to/py-mnemonic/pick.py /usr/local/bin/pick
 
-You can use the command by itself to get a single random word...
+You can use the command with the following options:
 
-    $ pick
-    pencil
-
-...or you can pass an integer as an argument to get a dash-separated string:
-
-    $ pick 3
-    leopard-tennis-clean
-
-Please note: the longer your word list file is, the lower the chance of repetition in long strings.
+- `-a` or `--all`: will return the complete list.
+- `-l X` or `--letter X` will return a random word from the list starting with the letter *X*.
+- `-n X` or `--number X` will return *X* number of random words.
+- `-p X` or `--password X` will return a strong, easy-to-communicate password, comprised of *X* random words and separated by dashes. (To promote good password security, it will not produce a password of fewer than 3 words.)
 
 ## License
 
