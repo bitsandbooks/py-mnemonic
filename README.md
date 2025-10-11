@@ -6,12 +6,12 @@ Py-mnemonic generates somewhat-secure, psuedo-random passphrases, based upon a f
 
 ## Usage
 
-For ease of use, it is recommended to symlink `pick.py` as `pick` to a folder on your `$PATH`. You can do this by entering the following at a shell prompt:
+For ease of use, it is recommended to symlink `mnemonic.py` as something like `mnemonic` into a folder on your `$PATH`. You can do this by entering the following at a shell prompt:
 
-    $ chmod u+x /path/to/py-mnemonic/pick.py
-    $ ln -s /path/to/py-mnemonic/pick.py /usr/local/bin/pick
+    $ chmod u+x /path/to/py-mnemonic/mnemonic.py
+    $ ln -s /path/to/py-mnemonic/mnemonic.py /usr/local/bin/mnemonic
 
-You can use the command with the following options:
+## Options
 
 - `-w N`, `--words=N `: Number of words to use (1..20) in generating the passphrase. If omitted, defaults to a single word.
 - `-l m`, `--letter=m`: Require all chosen words to start with the letter `m`, or other (case-insensitive) letter.
@@ -29,13 +29,93 @@ You can use the command with the following options:
 
 ## Examples:
 
-    $ pick.py
-    $ pick.py --seed 1111 -w 3
-    $ pick.py -w 4 -l b -s dots
-    $ pick.py -w 2 -s numbers -c
-    $ pick.py -w 3 -s random
-    $ pick.py -u
-    $ pick.py --uuid -c --json
+    $ mnemonic
+    $ mnemonic --seed 1111 -w 3
+    $ mnemonic -w 4 -l b -s dots
+    $ mnemonic -w 2 -s numbers -c
+    $ mnemonic -w 3 -s random
+    $ mnemonic -u
+    $ mnemonic --uuid -c --json
+
+## Reproducible Tests (using the default `wordlist.txt`)
+
+If you run these commands, you should see the same results:
+
+<table>
+    <tr>
+        <th>Label</th>
+        <th>Command</th>
+        <th>Expected output</th>
+        <th>Expected errors/warnings (if any)</th>
+    </tr>
+    <tr>
+        <td>T1: default single word</td>
+        <td>mnemonic --seed 1111</td>
+        <td>echo</td>
+        <td>&nbsp;</td>
+    </tr>
+    <tr>
+        <td>T2: single word + caps</td>
+        <td>mnemonic --seed 1111 -c</td>
+        <td>Echo</td>
+        <td>&nbsp;</td>
+    </tr>
+    <tr>
+        <td>T3: single word + dot</td>
+        <td>mnemonic --seed 2222 -s dots</td>
+        <td>dublin.</td>
+        <td>&nbsp;</td>
+    </tr>
+    <tr>
+        <td>T4: 3 words default separators</td>
+        <td>mnemonic --seed 3333 -w 3</td>
+        <td>cheese-pamela-phrase</td>
+        <td>&nbsp;</td>
+    </tr>
+    <tr>
+        <td>T5: 3 words + caps</td>
+        <td>mnemonic --seed 4444 -w 3 -c</td>
+        <td>Pandora-Sport-Madrid</td>
+        <td>&nbsp;</td>
+    </tr>
+    <tr>
+        <td>T6: 4 words coverage dots,dashes</td>
+        <td>mnemonic --seed 5555 -w 4 -s dots,dashes</td>
+        <td>maximum-cannon-bahama.expand</td>
+        <td>&nbsp;</td>
+    </tr>
+    <tr>
+        <td>T7: 3 words random separators</td>
+        <td>mnemonic --seed 6666 -w 3 -s random</td>
+        <td>effect108cockpit215falcon</td>
+        <td>&nbsp;</td>
+    </tr>
+    <tr>
+        <td>T8: 2 words (warning expected)</td>
+        <td>mnemonic --seed 7777 -w 2 -s dots,dashes,numbers</td>
+        <td>cinema.pasta</td>
+        <td>Warning: you requested 2 words (1 separator slot) but specified 3 different separator kinds: dashes, dots, numbers. It’s not possible to include every kind at least once with the available slots.</td>
+    </tr>
+    <tr>
+        <td>T9: single word + numbers</td>
+        <td>mnemonic --seed 8888 -s numbers</td>
+        <td>process272</td>
+        <td>&nbsp;</td>
+    </tr>
+    <tr>
+        <td>T10: 5 words no-dup-letters</td>
+        <td>mnemonic --seed 9999 -w 5 -d</td>
+        <td>libra-admiral-zodiac-xray-tactic</td>
+        <td>&nbsp;</td>
+    </tr>
+    <tr>
+        <td>T11: 5 words len 4–6 random,dots,underscores</td>
+        <td>mnemonic --seed 2468 -w 5 --min-length 4 --max-length 6 -s random,dots,underscores</td>
+        <td>lake-shoe921lobby.druid_engine</td>
+        <td>&nbsp;</td>
+    </tr>
+</table>
+
 
 ## License
 
