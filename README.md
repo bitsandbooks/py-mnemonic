@@ -14,13 +14,13 @@ For ease of use, it is recommended to symlink `mnemonic.py` as something like `m
 ## Options
 
 - `-w N`, `--words=N `: Number of words to use (1..20) in generating the passphrase. If omitted, defaults to a single word.
-- `-l m`, `--letter=m`: Require all chosen words to start with the letter `m`, or other (case-insensitive) letter.
+- `-l m`, `--letter=m`: Require all chosen words to start with the letter `m`, or other (case-insensitive) letter. Mutually exclusive with `-d`.
 - `-c`, `--caps`: Capitalize some words in a multi-word passphrase to provide better security; single word is always Capitalized. Mutually exclusive with `-C`.
-- `-C`, `--caps-upper`: UPPERCASE some words in a multi-word passphrase to provide better security; single word is always UPPERCASE. Mutually exclusive `-c`.
+- `-C`, `--caps-upper`: UPPERCASE some words in a multi-word passphrase to provide better security; single word is always UPPERCASE. Mutually exclusive with `-c`.
 - `-s spec`, `--separators=spec`: Separator spec: `dots`, `dashes`, `underscores`, `numbers`, `random`. For multi-word phrases, default is `dashes` if not specified. Multiple kinds allowed (e.g., `dots,numbers,underscores`). Each concrete kind appears at least once when possible, while `random` provides a random selection of the other types. For a single word, no separator is appended unless you supply `-s`.
 - `-d, --no-dup-letters`: For multi-word phrases, ensure each chosen word starts with a different letter. Mutually exclusive with `-l`.
 - `-q`, `--quiet`: Suppress warnings and informational notes.
-- `-u`, `--uuid`: Print a random UUID. Lowercase by default; uppercase if `-c` is supplied.
+- `-u`, `--uuid`: Print a random UUID. Lowercase by default; uppercase if `-c` or `-C` are supplied.
 - `--wordlist PATH`: Use `PATH` as the wordlist instead of `./wordlist.txt`
 - `--all-words`: Print the entire wordlist file verbatim and exit.
 - `--min-length N`: Keep only words ≥ N letters long before selecting.

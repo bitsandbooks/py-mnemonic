@@ -201,40 +201,43 @@ def pick_words_no_dup_letters(pool, k: int):
     return chosen
 
 def print_help_and_exit():
-    print("""py-mnemonic — generate somewhat-secure, psuedo-random passphrases.
+    print("""mnemonic — generate somewhat-secure, psuedo-random passphrases.
 
 Options:
   -? / --help / -h       Show this help message
-  -w N, --words=N        Number of words to use (1..20). If omitted, defaults to a single word.
-  -l m, --letter=m       Require all chosen words to start with the given letter (case-insensitive).
-  -c, --caps             Capitalize some words in a multi-word passphrase to provide better security;
-                         single word is always Capitalized. Mutually exclusive with -C.
-  -C, --caps-upper       UPPERCASE some words in a multi-word passphrase to provide better security;
-                         single word is always UPPERCASE. Mutually exclusive with -c.
+  -w N, --words=N        Number of words to use (1..20). If omitted, defaults to
+                         a single word.
+  -l m, --letter=m       Require all chosen words to start with the given letter
+                         (case-insensitive).
+                         Mutually exclusive with -d.
+  -c, --caps             Capitalize some words in a multi-word passphrase to
+                         provide better security; single word is always
+                         Capitalized. Mutually exclusive with -C.
+  -C, --caps-upper       UPPERCASE some words in a multi-word passphrase to
+                         provide better security; single word is always
+                         UPPERCASE. Mutually exclusive with -c.
   -s spec, --separators=spec
-                         Separator spec: dots, dashes, underscores, numbers, random.
-                         For multi-word phrases, default is dashes if not specified.
-                         Multiple kinds allowed (e.g. dots,numbers,underscores). Each concrete kind appears
-                         at least once when possible (random expands the pool but is not “required”).
-                         For a single word, NO separator is appended unless you supply -s.
-  -d, --no-dup-letters   For multi-word phrases, ensure each chosen word starts with a different letter.
+                         Separator spec: dots, dashes, underscores, numbers,
+                         random. For multi-word passphrases, default is dashes
+                         if not specified. Multiple kinds allowed (e.g.,
+                         dots,numbers,underscores). Each concrete kind appears
+                         at least once when possible (random expands the pool
+                         but is not “required”). For a single word, NO separator
+                         is appended unless you supply -s.
+  -d, --no-dup-letters   For multi-word phrases, ensure each chosen word starts
+                         with a different letter. Mutually exclusive with -l.
   -q, --quiet            Suppress warnings and informational notes.
-  -u, --uuid             Print a random UUID (lowercase by default; uppercase if -c or -C is supplied).
-  --wordlist PATH        Use PATH as the wordlist instead of the script's default wordlist file.
+  -u, --uuid             Print a random UUID (lowercase by default; uppercase if
+                         -c or -C is supplied).
+  --wordlist PATH        Use PATH as the wordlist instead of the script's
+                         default wordlist file.
   --all-words            Print the entire wordlist file verbatim and exit.
   --min-length N         Keep only words of length >= N before selecting.
   --max-length N         Keep only words of length <= N before selecting.
-  --seed N               Seed Python's random module to make results reproducible.
-  --json                 Output a JSON object with output, warnings, and metadata (no stderr).
-
-Examples:
-  mnemonic
-  mnemonic --seed 1111 -w 3
-  mnemonic -w 4 -l b -s dots
-  mnemonic -w 2 -s numbers -c
-  mnemonic -w 3 -C -s random
-  mnemonic -u
-  mnemonic --uuid -C --json
+  --seed N               Seed Python's random module to make results
+                         reproducible.
+  --json                 Output a JSON object with output, warnings, and
+                         metadata (no stderr).
 """)
     sys.exit(0)
 
