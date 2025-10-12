@@ -123,8 +123,8 @@ If you run these commands, you should see the same results:
     </tr>
     <tr>
         <td>T13: 1 word with -C and dot</td>
-        <td>mnemonic --seed 24601 -C -s dots</td>
-        <td>PRIZE.</td>
+        <td>mnemonic --seed 10101 -C -s numbers</td>
+        <td>TUNNEL925</td>
         <td>&nbsp;</td>
     </tr>
 </table>
