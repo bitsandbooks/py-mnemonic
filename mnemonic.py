@@ -33,7 +33,10 @@ import json
 from pathlib import Path
 from collections import defaultdict
 
-DEFAULT_WORDLIST = Path("wordlist.txt")
+# Resolve default wordlist relative to the actual script location (follows symlinks)
+SCRIPT_DIR = Path(__file__).resolve().parent
+DEFAULT_WORDLIST = SCRIPT_DIR / "wordlist.txt"
+
 MAX_WORDS = 20
 MIN_WORDS = 1
 
@@ -56,7 +59,7 @@ SEPARATOR_ALIASES = {
     "random": "random",  # special pseudo-kind
 }
 
-def load_wordlist(path):
+def load_wordlist(path: Path):
     if not path.exists() or not path.is_file():
         raise FileNotFoundError("Wordlist file not found: {}".format(path))
     words = []
@@ -77,7 +80,7 @@ def filter_by_length(words, min_len, max_len):
     return [w for w in words if (min_len is None or len(w) >= min_len)
             and (max_len is None or len(w) <= max_len)]
 
-def parse_separators(spec):
+def parse_separators(spec: str):
     parts = [p.strip() for p in spec.split(",") if p.strip()]
     if not parts:
         raise ValueError("Empty separator specification")
@@ -87,10 +90,10 @@ def parse_separators(spec):
         if key not in SEPARATOR_ALIASES:
             valid = ", ".join(sorted(set(SEPARATOR_ALIASES.keys())))
             raise ValueError("Unknown separator '{}'. Valid options: {}".format(p, valid))
-        out.append(SEPARATOR_ALIASES[key])  # normalize to canonical token
+        out.append(SEPARATOR_ALIASES[key])  # canonical token
     return out  # list of canonical tokens: dots|dashes|underscores|numbers|random
 
-def _render_separator_instance(token):
+def _render_separator_instance(token: str) -> str:
     """Return the concrete separator string for a canonical token."""
     if token == "random":
         token = random.choice(BASIC_KINDS)
@@ -146,7 +149,7 @@ def choose_single_separator(tokens):
     sep = _render_separator_instance(token)
     return sep, token  # return the canonical token name for notes
 
-def apply_caps_to_word(word, caps_mode, is_single_word):
+def apply_caps_to_word(word: str, caps_mode: str, is_single_word: bool) -> str:
     """
     caps_mode: 'none' | 'mixed_cap' | 'mixed_upper'
       - 'mixed_cap'   : single word -> Capitalize; multi-word -> 40% chance Capitalize, else lower
@@ -164,7 +167,7 @@ def apply_caps_to_word(word, caps_mode, is_single_word):
         return word.capitalize()
     return word.capitalize() if random.random() < 0.4 else word.lower()
 
-def build_passphrase(words, separators_tokens, caps_mode):
+def build_passphrase(words, separators_tokens, caps_mode: str) -> str:
     if len(words) == 1:
         return apply_caps_to_word(words[0], caps_mode, True)
     cased = [apply_caps_to_word(w, caps_mode, False) for w in words]
@@ -175,7 +178,7 @@ def build_passphrase(words, separators_tokens, caps_mode):
             pieces.append(separators_tokens[i])
     return "".join(pieces)
 
-def pick_words_no_dup_letters(pool, k):
+def pick_words_no_dup_letters(pool, k: int):
     groups = defaultdict(list)
     for w in pool:
         if not w:
@@ -217,7 +220,7 @@ Options:
   -d, --no-dup-letters   For multi-word phrases, ensure each chosen word starts with a different letter.
   -q, --quiet            Suppress warnings and informational notes.
   -u, --uuid             Print a random UUID (lowercase by default; uppercase if -c or -C is supplied).
-  --wordlist PATH        Use PATH as the wordlist instead of ./wordlist.txt
+  --wordlist PATH        Use PATH as the wordlist instead of the script's default wordlist file.
   --all-words            Print the entire wordlist file verbatim and exit.
   --min-length N         Keep only words of length >= N before selecting.
   --max-length N         Keep only words of length <= N before selecting.
@@ -294,7 +297,8 @@ def main(argv=None):
             and args.min_length > args.max_length):
         return error_exit("Error: --min-length cannot be greater than --max-length.")
 
-    wordlist_path = Path(args.wordlist) if args.wordlist else DEFAULT_WORDLIST
+    # Expand ~ if provided; otherwise default to wordlist next to this script
+    wordlist_path = Path(args.wordlist).expanduser() if args.wordlist else DEFAULT_WORDLIST
 
     if args.all_words:
         try:
@@ -450,6 +454,9 @@ def main(argv=None):
         )
 
     if args.json:
+        meta.update({
+            "covered_all_required": bool(covered_all),
+        })
         return emit_json("ok", {"mode": "words", "output": output, "warnings": warnings_out, "meta": meta})
 
     # Plain-text mode
