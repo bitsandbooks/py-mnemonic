@@ -15,7 +15,8 @@ For ease of use, it is recommended to symlink `mnemonic.py` as something like `m
 
 - `-w N`, `--words=N `: Number of words to use (1..20) in generating the passphrase. If omitted, defaults to a single word.
 - `-l m`, `--letter=m`: Require all chosen words to start with the letter `m`, or other (case-insensitive) letter.
-- `-c`, `--caps`: Randomly capitalize some of the words in the passphrase to provide better security. If a single word is requested, it is always capitalized.
+- `-c`, `--caps`: Capitalize some words in a multi-word passphrase to provide better security; single word is always Capitalized. Mutually exclusive with `-C`.
+- `-C`, `--caps-upper`: UPPERCASE some words in a multi-word passphrase to provide better security; single word is always UPPERCASE. Mutually exclusive `-c`.
 - `-s spec`, `--separators=spec`: Separator spec: `dots`, `dashes`, `underscores`, `numbers`, `random`. For multi-word phrases, default is `dashes` if not specified. Multiple kinds allowed (e.g., `dots,numbers,underscores`). Each concrete kind appears at least once when possible, while `random` provides a random selection of the other types. For a single word, no separator is appended unless you supply `-s`.
 - `-d, --no-dup-letters`: For multi-word phrases, ensure each chosen word starts with a different letter. Mutually exclusive with `-l`.
 - `-q`, `--quiet`: Suppress warnings and informational notes.
@@ -33,9 +34,9 @@ For ease of use, it is recommended to symlink `mnemonic.py` as something like `m
     $ mnemonic --seed 1111 -w 3
     $ mnemonic -w 4 -l b -s dots
     $ mnemonic -w 2 -s numbers -c
-    $ mnemonic -w 3 -s random
+    $ mnemonic -w 3 -C -s random
     $ mnemonic -u
-    $ mnemonic --uuid -c --json
+    $ mnemonic --uuid -C --json
 
 ## Reproducible Tests (using the default `wordlist.txt`)
 
@@ -112,6 +113,18 @@ If you run these commands, you should see the same results:
         <td>T11: 5 words len 4–6 random,dots,underscores</td>
         <td>mnemonic --seed 2468 -w 5 --min-length 4 --max-length 6 -s random,dots,underscores</td>
         <td>lake-shoe921lobby.druid_engine</td>
+        <td>&nbsp;</td>
+    </tr>
+    <tr>
+        <td>T12: 3 words with -C (upper 40%)</td>
+        <td>mnemonic --seed 1357 -w 3 -C</td>
+        <td>product-marvin-LEOPARD</td>
+        <td>&nbsp;</td>
+    </tr>
+    <tr>
+        <td>T13: 1 word with -C and dot</td>
+        <td>mnemonic --seed 24601 -C -s dots</td>
+        <td>PRIZE.</td>
         <td>&nbsp;</td>
     </tr>
 </table>

@@ -146,24 +146,28 @@ def choose_single_separator(tokens):
     sep = _render_separator_instance(token)
     return sep, token  # return the canonical token name for notes
 
-def apply_caps_to_word(word, caps_flag, single_word_always_cap):
+def apply_caps_to_word(word, caps_mode, is_single_word):
     """
-    If caps_flag is True:
-      - Single word: always capitalize.
-      - Multiple words: each has a 40% chance to be capitalized (Capitalize or UPPER).
+    caps_mode: 'none' | 'mixed_cap' | 'mixed_upper'
+      - 'mixed_cap'   : single word -> Capitalize; multi-word -> 40% chance Capitalize, else lower
+      - 'mixed_upper' : single word -> UPPERCASE;  multi-word -> 40% chance UPPERCASE, else lower
+      - 'none'        : leave as-is (lowercase)
     """
-    if not caps_flag:
+    if caps_mode == "none":
         return word
-    if single_word_always_cap:
+    if caps_mode == "mixed_upper":
+        if is_single_word:
+            return word.upper()
+        return word.upper() if random.random() < 0.4 else word.lower()
+    # mixed_cap
+    if is_single_word:
         return word.capitalize()
-    if random.random() < 0.4:
-        return random.choice([word.capitalize(), word.upper()])
-    return word.lower()
+    return word.capitalize() if random.random() < 0.4 else word.lower()
 
-def build_passphrase(words, separators_tokens, caps, single_word_always_cap):
+def build_passphrase(words, separators_tokens, caps_mode):
     if len(words) == 1:
-        return apply_caps_to_word(words[0], caps, single_word_always_cap)
-    cased = [apply_caps_to_word(w, caps, False) for w in words]
+        return apply_caps_to_word(words[0], caps_mode, True)
+    cased = [apply_caps_to_word(w, caps_mode, False) for w in words]
     pieces = []
     for i, w in enumerate(cased):
         pieces.append(w)
@@ -194,22 +198,25 @@ def pick_words_no_dup_letters(pool, k):
     return chosen
 
 def print_help_and_exit():
-    print("""pick.py — generate memorable passphrases.
+    print("""py-mnemonic — generate somewhat-secure, psuedo-random passphrases.
 
 Options:
   -? / --help / -h       Show this help message
   -w N, --words=N        Number of words to use (1..20). If omitted, defaults to a single word.
   -l m, --letter=m       Require all chosen words to start with the given letter (case-insensitive).
-  -c, --caps             Randomly capitalize about 40% of the words. If only one word is requested, it is always capitalized.
+  -c, --caps             Capitalize some words in a multi-word passphrase to provide better security;
+                         single word is always Capitalized. Mutually exclusive with -C.
+  -C, --caps-upper       UPPERCASE some words in a multi-word passphrase to provide better security;
+                         single word is always UPPERCASE. Mutually exclusive with -c.
   -s spec, --separators=spec
                          Separator spec: dots, dashes, underscores, numbers, random.
                          For multi-word phrases, default is dashes if not specified.
-                         Multiple kinds allowed (e.g. dots,dashes,random). Each concrete kind appears
+                         Multiple kinds allowed (e.g. dots,numbers,underscores). Each concrete kind appears
                          at least once when possible (random expands the pool but is not “required”).
                          For a single word, NO separator is appended unless you supply -s.
   -d, --no-dup-letters   For multi-word phrases, ensure each chosen word starts with a different letter.
   -q, --quiet            Suppress warnings and informational notes.
-  -u, --uuid             Print a random UUID (lowercase by default; uppercase if -c is supplied).
+  -u, --uuid             Print a random UUID (lowercase by default; uppercase if -c or -C is supplied).
   --wordlist PATH        Use PATH as the wordlist instead of ./wordlist.txt
   --all-words            Print the entire wordlist file verbatim and exit.
   --min-length N         Keep only words of length >= N before selecting.
@@ -218,13 +225,13 @@ Options:
   --json                 Output a JSON object with output, warnings, and metadata (no stderr).
 
 Examples:
-  pick.py
-  pick.py --seed 1111 -w 3
-  pick.py -w 4 -l b -s dots
-  pick.py -w 2 -s numbers -c
-  pick.py -w 3 -s random
-  pick.py -u
-  pick.py --uuid -c --json
+  mnemonic
+  mnemonic --seed 1111 -w 3
+  mnemonic -w 4 -l b -s dots
+  mnemonic -w 2 -s numbers -c
+  mnemonic -w 3 -C -s random
+  mnemonic -u
+  mnemonic --uuid -C --json
 """)
     sys.exit(0)
 
@@ -239,11 +246,12 @@ def main(argv=None):
     p.add_argument("-w", "--words", type=int)
     p.add_argument("-l", "--letter", metavar="m")
     p.add_argument("-c", "--caps", action="store_true")
+    p.add_argument("-C", "--caps-upper", dest="caps_upper", action="store_true")
     # IMPORTANT: default=None so we know if user actually provided -s
     p.add_argument("-s", "--separators", metavar="spec", default=None)
     p.add_argument("-d", "--no-dup-letters", action="store_true", dest="no_dup_letters")
     p.add_argument("-q", "--quiet", action="store_true", dest="quiet")
-    p.add_argument("-u", "--uuid", action="store_true")  # <-- short alias added
+    p.add_argument("-u", "--uuid", action="store_true")
     p.add_argument("--wordlist", metavar="PATH")
     p.add_argument("--all-words", action="store_true")
     p.add_argument("--min-length", type=int, dest="min_length")
@@ -265,6 +273,18 @@ def main(argv=None):
         print(msg, file=sys.stderr)
         return code
 
+    # Disallow combining -c and -C
+    if args.caps and args.caps_upper:
+        return error_exit("Error: --caps (-c) and --caps-upper (-C) cannot be used together. Choose one.")
+
+    # Determine caps mode
+    if args.caps_upper:
+        caps_mode = "mixed_upper"
+    elif args.caps:
+        caps_mode = "mixed_cap"
+    else:
+        caps_mode = "none"
+
     # Validate length filters
     if args.min_length is not None and args.min_length < 1:
         return error_exit("Error: --min-length must be >= 1.")
@@ -281,20 +301,23 @@ def main(argv=None):
             content = wordlist_path.read_text(encoding="utf-8").rstrip("\n")
         except Exception as e:
             return error_exit("Error reading wordlist {}: {}".format(wordlist_path, e))
+        payload = {"mode": "all-words", "output": content, "warnings": [], "meta": {
+            "wordlist": str(wordlist_path)
+        }}
         if args.json:
-            return emit_json("ok", {"mode": "all-words", "output": content, "warnings": [], "meta": {
-                "wordlist": str(wordlist_path)
-            }})
+            return emit_json("ok", payload)
         print(content)
         return 0
 
     if args.uuid:
         u = str(uuid.uuid4())
-        u = u.upper() if args.caps else u.lower()
+        # Uppercase if either -c or -C was requested
+        u = u.upper() if (args.caps or args.caps_upper) else u.lower()
+        payload = {"mode": "uuid", "output": u, "warnings": [], "meta": {
+            "caps_mode": caps_mode
+        }}
         if args.json:
-            return emit_json("ok", {"mode": "uuid", "output": u, "warnings": [], "meta": {
-                "caps": bool(args.caps)
-            }})
+            return emit_json("ok", payload)
         print(u)
         return 0
 
@@ -341,7 +364,6 @@ def main(argv=None):
                                "Relax constraints or lower -w.").format(e, distinct_letters))
         return error_exit("Error: {}".format(e))
 
-    single_word_always_cap = (words_count == 1 and args.caps)
     slots = max(0, words_count - 1)
 
     # For multi-word phrases, default separators to dashes if user didn't specify -s
@@ -362,7 +384,7 @@ def main(argv=None):
         "seed": args.seed,
         "wordlist": str(wordlist_path),
         "words_count": words_count,
-        "caps": bool(args.caps),
+        "caps_mode": caps_mode,
         "letter": args.letter if args.letter else None,
         "min_length": args.min_length,
         "max_length": args.max_length,
@@ -374,7 +396,7 @@ def main(argv=None):
 
     # Single-word behavior:
     if words_count == 1:
-        base = apply_caps_to_word(chosen_words[0], args.caps, single_word_always_cap)
+        base = apply_caps_to_word(chosen_words[0], caps_mode, True)
         if effective_separators is None:
             output = base
             if args.json:
@@ -410,7 +432,7 @@ def main(argv=None):
         "chosen_separator_tokens": chosen_sep_tokens,  # canonical tokens picked per slot
         "covered_all_required": bool(covered_all),
     })
-    output = build_passphrase(chosen_words, sep_slots, args.caps, single_word_always_cap)
+    output = build_passphrase(chosen_words, sep_slots, caps_mode)
 
     if not args.quiet and warn_impossible_cover and not covered_all:
         kinds_list = sorted(set(explicit_concrete))
